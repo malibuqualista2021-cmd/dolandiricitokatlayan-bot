@@ -1,1 +1,1 @@
-worker: node moderator-bot/index.js
+worker: node index.js
