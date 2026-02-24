@@ -136,11 +136,28 @@ bot.on('message', async (ctx) => {
 });
 
 bot.on('chat_member', async (ctx) => {
-    const { new_chat_member } = ctx.update.chat_member;
+    const { old_chat_member, new_chat_member } = ctx.update.chat_member;
     const user = new_chat_member.user;
 
+    // OTOMATİK UNBAN TESPİTİ: 
+    // Eğer admin manuel olarak banı kaldırırsa (kicked -> left/member), 
+    // bu kişiyi kara listeden de çıkarıyoruz ki bir daha girmeye çalışınca bot tekrar atmasın.
+    if (old_chat_member && old_chat_member.status === 'kicked' && new_chat_member.status !== 'kicked') {
+        if (removeFromBlacklist(user.id)) {
+            console.log(`[MANUEL UNBAN] Yönetici ${user.id} kullanıcısının banını açtı, kara listeden silindi.`);
+            if (ADMIN_ID) {
+                await ctx.telegram.sendMessage(ADMIN_ID, `ℹ️ <b>Bilgi:</b> ${user.first_name} (${user.id}) banı manuel olarak açıldı, kara listeden silindi.`, { parse_mode: 'HTML' });
+            }
+        }
+        return;
+    }
+
+    // TAKLİTÇİ GİRİŞ KONTROLÜ
     if ((new_chat_member.status === 'member' || new_chat_member.status === 'restricted') && isImpersonator(user)) {
         try {
+            console.log(`[TAKLİT GİRİŞİ] ${user.first_name} engelleniyor.`);
+
+            // Dolandırıcının mesajı (eğer varsa) silinemez burada çünkü sadece giriş yaptı
             await ctx.banChatMember(user.id);
             saveToBlacklist(user.id);
 
