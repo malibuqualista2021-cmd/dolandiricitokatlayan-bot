@@ -107,6 +107,15 @@ bot.on('message', async (ctx) => {
     if (isImpersonator(user)) {
         try {
             console.log(`[BAN] ${user.first_name} (@${user.username || 'yok'}) yakalandı.`);
+
+            // Dolandırıcının mesajını sil
+            try {
+                await ctx.deleteMessage();
+                console.log(`[TEMİZLİK] Dolandırıcının mesajı silindi.`);
+            } catch (msgErr) {
+                console.error('Mesaj silme hatası (dolandırıcı):', msgErr.message);
+            }
+
             await ctx.banChatMember(user.id);
             saveToBlacklist(user.id);
 
